@@ -77,19 +77,5 @@ class Api {
     }
 }
 
-class Transaction {
-    constructor(date, company, account, amount) {
-        this.date = date;
-        this.company = company;
-        this.account = account;
-        this.amount = amount;
-    }
-
-    // attaches the transaction list item to the site
-    attachToSite(site) {
-        // TODO
-    }
-}
-
 const app = new App();
 app.init();
