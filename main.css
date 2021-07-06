@@ -46,6 +46,8 @@ h2 {
 
 .col4 {
     padding-right: 1rem;
+    text-align: right;
+    width: 10%;
 }
 
 ul {
