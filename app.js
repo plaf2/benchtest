@@ -1,6 +1,5 @@
 class App {
     constructor() {
-
     }
 
     async init() {
@@ -12,15 +11,37 @@ class App {
         });
     }
 
+    formatCurrency(num) {
+       const formatter = new Intl.NumberFormat("en", { style: "currency", currency: "USD"});
+       return formatter.format(num);
+    }
 
     appendListItems(items) {
         let listSite = document.getElementById("transaction_list");
         let total = 0;
 
-        // sort
-        // TODO:
-        items = items.slice().sort((a, b) => new Date(b["Date"]) - new Date(a["Date"]));
+        // create a date object for each item
+        items.forEach(item => {
+            let dateArr = item["Date"].split("-");
+            if (dateArr.length === 3) {
+                let y = parseInt(dateArr[0]);
+                let m = parseInt(dateArr[1]);
+                let da = parseInt(dateArr[2]);
 
+                // invalid date
+                if (isNaN(m) || isNaN(y) || isNaN(da)) {
+                    return;
+                }
+
+                let d = new Date(y, m - 1, da -1);
+                item["Date"] = d;
+            }
+        });
+
+        // sort from most recent to oldest
+        items = items.slice().sort((a, b) => b["Date"] - a["Date"]);
+
+        // append each list element to the site
         items.forEach((item, index) => {
             let li = document.createElement("li");
             li.className = ((index + 1) % 2) === 0 ? "even" : "odd";
@@ -31,23 +52,23 @@ class App {
 
             this.appendColumnLedger(item, li);
 
-            total = this.appendColumnAmount(item, total, li);
+            total += this.appendColumnAmount(item, li);
 
             listSite.appendChild(li);
         });
-        // TODO: formatting
+       
+        // update total 
         let totalSite = document.getElementById("header_col4");
-        totalSite.innerText = "$" + total.toFixed(2);
+        totalSite.innerText = this.formatCurrency(total);
     }
 
-    appendColumnAmount(item, total, li) {
+    appendColumnAmount(item,li) {
         let col4 = document.createElement("div");
         col4.className = "col4";
-        const amount = item["Amount"] * -1;
-        total += amount;
-        col4.innerText = amount < 0 ? "-$" + (amount * -1).toFixed(2) : "$" + amount.toFixed(2);
+        const amount = parseFloat(item["Amount"]);
+        col4.innerText = this.formatCurrency(amount);
         li.appendChild(col4);
-        return total;
+        return amount;
     }
 
     appendColumnLedger(item, li) {
@@ -65,22 +86,10 @@ class App {
     }
     
     parseDateString(date) {
-        let dateString = date ?? "";
-        let dateArr = date.split("-");
-        if (dateArr.length === 3) {
-            let y = parseInt(dateArr[0]);
-            let m = parseInt(dateArr[1]);
-            let da = parseInt(dateArr[2]);
-
-            // invalid date
-            if (isNaN(m) || isNaN(y) || isNaN(da)) {
-                return date;
-            }
-
-            let d = new Date(y - 1, m - 1, da -1);
-            let year = dateArr[0];
-            let month = new Intl.DateTimeFormat("en", { month: "short" }).format(d);
-            let day = new Intl.DateTimeFormat("en", { day: "numeric" }).format(d);
+        if (date instanceof Date) {
+            const year = new Intl.DateTimeFormat("en", { year: "numeric" }).format(date)
+            const month = new Intl.DateTimeFormat("en", { month: "short" }).format(date);
+            let day = new Intl.DateTimeFormat("en", { day: "numeric" }).format(date);
 
             // add suffix to day
             const dayInt = parseInt(day[day.length - 1]);
@@ -97,12 +106,14 @@ class App {
                 } else {
                     day += "th";
                 }
+            } else {
+                return date;
             }
 
-            dateString = month + " " + day + ", " + year;
+            return month + " " + day + ", " + year;
+        } else {
+            return date;
         }
-
-        return dateString;
     }
 
     appendColumnDate(item, li) {
@@ -114,8 +125,7 @@ class App {
 }
 
 class Api {
-    constructor () {
-        
+    constructor () {   
     }
 
     async getTransactionsHelper(transactions, page) {
