@@ -36,11 +36,7 @@ h2 {
     padding-left: 1rem;
 }
 
-.col2 {
-    width: 40%;
-}
-
-.col3 {
+.col2, .col3 {
     width: 40%;
 }
 
